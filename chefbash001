@@ -1,0 +1,19 @@
+bash 'example' do
+  code <<-EOH
+    # Your bash commands here
+    my_variable="Hello, Chef!"
+    echo $my_variable
+    EOH
+  action :run
+end
+
+# Store the Bash variable value in a Chef node attribute
+node.default['my_attribute'] = node['my_variable']
+
+# Access the Bash variable value outside the Bash resource
+ruby_block 'access_variable' do
+  block do
+    puts "Bash variable value: #{node['my_attribute']}"
+  end
+  action :run
+end
