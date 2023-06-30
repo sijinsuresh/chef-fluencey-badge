@@ -2,15 +2,18 @@ bash 'get_volume_id' do
   code <<-EOH
     volume_id=$(aws ec2 describe-volumes --filters "Name=tag:your_tag_key,Values=your_tag_value" --query "Volumes[].VolumeId" --output text)
     echo "Volume ID: $volume_id"
-    node.run_state['volume_id'] = volume_id
+    echo "$volume_id" > /tmp/volume_id.txt
   EOH
   action :run
+end
+
+file '/tmp/volume_id.txt' do
+  action :create
 end
 
 my_resource 'example' do
   # Your resource properties and actions
 
-  # Access the volume ID from the node attribute
-  volume_id = node.run_state['volume_id']
+  volume_id = File.read('/tmp/volume_id.txt').strip
   # Use the volume_id variable as needed
 end
