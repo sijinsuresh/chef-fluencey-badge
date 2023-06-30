@@ -1,15 +1,19 @@
-require 'mixlib/shellout'
+bash 'execute_bash_command' do
+  code <<-EOH
+    # Your Bash command(s) go here
+    # ...
+    echo "Hello, World!"
+    echo "This is a Bash command"
+  EOH
+  action :run
+  live_stream true
+  notifies :run, 'ruby_block[save_output]', :immediately
+end
 
-# Run multiple lines of Bash commands and capture the output
-shell_out = Mixlib::ShellOut.new(<<-EOH)
-  # Line 1 of Bash command
-  echo "Hello, World!"
-
-  # Line 2 of Bash command
-  echo "This is another line"
-EOH
-shell_out.run_command
-output = shell_out.stdout.strip
-
-# Assign the output to a node attribute
-node.default['my_attribute'] = output
+# Ruby block to save the output to a node attribute
+ruby_block 'save_output' do
+  block do
+    node.default['my_attribute'] = shell_out!('your_bash_command').stdout.strip
+  end
+  action :nothing
+end
