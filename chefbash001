@@ -3,16 +3,14 @@ bash 'get_volume_id' do
     az="us-west-2a"
     volume_id=$(aws ec2 describe-volumes --filters "Name=availability-zone,Values=$az" --query "Volumes[0].VolumeId" --output text)
     echo "Volume ID: $volume_id"
-    echo "Setting volume_id node attribute"
-    echo "node.default['volume_id'] = '$volume_id'" >> /tmp/attributes.rb
+    node.run_state['volume_id'] = volume_id
   EOH
-  not_if { ::File.exist?('/tmp/attributes.rb') }
-  notifies :run, 'ruby_block[load_attributes]', :immediately
 end
 
-ruby_block 'load_attributes' do
+# Access the volume ID from the node run state
+ruby_block 'print_volume_id' do
   block do
-    include_recipe '/tmp/attributes.rb'
+    volume_id = node.run_state['volume_id']
+    Chef::Log.info("Volume ID: #{volume_id}")
   end
-  action :nothing
 end
