@@ -1,19 +1,18 @@
-bash 'execute_bash_command' do
+bash 'get_volume_id' do
   code <<-EOH
-    # Your Bash command(s) go here
-    # ...
-    echo "Hello, World!"
-    echo "This is a Bash command"
+    az="us-west-2a"
+    volume_id=$(aws ec2 describe-volumes --filters "Name=availability-zone,Values=$az" --query "Volumes[0].VolumeId" --output text)
+    echo "Volume ID: $volume_id"
+    echo "Setting volume_id node attribute"
+    echo "node.default['volume_id'] = '$volume_id'" >> /tmp/attributes.rb
   EOH
-  action :run
-  live_stream true
-  notifies :run, 'ruby_block[save_output]', :immediately
+  not_if { ::File.exist?('/tmp/attributes.rb') }
+  notifies :run, 'ruby_block[load_attributes]', :immediately
 end
 
-# Ruby block to save the output to a node attribute
-ruby_block 'save_output' do
+ruby_block 'load_attributes' do
   block do
-    node.default['my_attribute'] = shell_out!('your_bash_command').stdout.strip
+    include_recipe '/tmp/attributes.rb'
   end
   action :nothing
 end
