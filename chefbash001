@@ -1,32 +1,18 @@
-bash 'get_volume_id' do
+bash 'set_env_variables' do
   code <<-EOH
-    volume_id=$(aws ec2 describe-volumes --filters "Name=tag:your_tag_key,Values=your_tag_value" --query "Volumes[].VolumeId" --output text)
-    echo "Volume ID: $volume_id"
-    echo "$volume_id" > /tmp/volume_id.txt
+    export VAR1="value1"
+    export VAR2="value2"
+    export VAR3="value3"
   EOH
-  action :run
+  notifies :run, 'ruby_block[store_variable]', :immediately
 end
 
-file '/tmp/volume_id.txt' do
-  action :create
-end
-
-my_resource 'example' do
-  # Your resource properties and actions
-
-  volume_id_file = '/tmp/volume_id.txt'
-  volume_id = nil
-
-  ruby_block 'read_volume_id' do
-    block do
-      if File.exist?(volume_id_file)
-        volume_id = File.read(volume_id_file).strip
-      else
-        Chef::Log.warn("Volume ID file '#{volume_id_file}' does not exist")
-      end
-    end
-    action :run
+ruby_block 'store_variable' do
+  block do
+    node.default['my_cookbook']['var1_value'] = ENV['VAR1']
+    node.default['my_cookbook']['var2_value'] = ENV['VAR2']
+    node.default['my_cookbook']['var3_value'] = ENV['VAR3']
   end
-
-  # Use the volume_id variable as needed
+  action :nothing
 end
+
