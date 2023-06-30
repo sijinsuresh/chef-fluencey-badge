@@ -1,18 +1,15 @@
-bash 'set_env_variables' do
-  code <<-EOH
-    export VAR1="value1"
-    export VAR2="value2"
-    export VAR3="value3"
-  EOH
-  notifies :run, 'ruby_block[store_variable]', :immediately
-end
+require 'mixlib/shellout'
 
-ruby_block 'store_variable' do
-  block do
-    node.default['my_cookbook']['var1_value'] = ENV['VAR1']
-    node.default['my_cookbook']['var2_value'] = ENV['VAR2']
-    node.default['my_cookbook']['var3_value'] = ENV['VAR3']
-  end
-  action :nothing
-end
+# Run multiple lines of Bash commands and capture the output
+shell_out = Mixlib::ShellOut.new(<<-EOH)
+  # Line 1 of Bash command
+  echo "Hello, World!"
 
+  # Line 2 of Bash command
+  echo "This is another line"
+EOH
+shell_out.run_command
+output = shell_out.stdout.strip
+
+# Assign the output to a node attribute
+node.default['my_attribute'] = output
