@@ -14,6 +14,19 @@ end
 my_resource 'example' do
   # Your resource properties and actions
 
-  volume_id = File.read('/tmp/volume_id.txt').strip
+  volume_id_file = '/tmp/volume_id.txt'
+  volume_id = nil
+
+  ruby_block 'read_volume_id' do
+    block do
+      if File.exist?(volume_id_file)
+        volume_id = File.read(volume_id_file).strip
+      else
+        Chef::Log.warn("Volume ID file '#{volume_id_file}' does not exist")
+      end
+    end
+    action :run
+  end
+
   # Use the volume_id variable as needed
 end
